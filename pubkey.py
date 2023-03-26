@@ -1,26 +1,26 @@
-from bitcoinrpc.authproxy import AuthServiceProxy
-from bitcoinrpc.connection import Connection
-from hashlib import sha256
-from bson import PyBSONDocument
-from pprint import pprint
+import bitcoin as b
+import hashlib
 
-def bitcoin_address_lookup(bitcoin_address):
-    # Initialize the bitcoin RPC connection with blockchain.com/api
-    rpc_password = b'your rpc password'
-    rpc_user = b'serializer'
-    rpc_connection = Connection(host='b.eu.blockchain.info', port=4443, user=rpc_user, password=rpc_password, disabled_ssl=True)
+# Authenticate with blockchain.com/api to get transaction information
+API_KEY = 'your API key here'
+api = b.BlockchainAPI(API_KEY)
 
-    # Retrieve the public key, balance and number of transactions from blockchain.com/api
-    json_message = rpc_connection.getinfo(bitcoin_address)
-    json_message = json_message['txs']
-    public_key = sha256(json_message['verack'].encode('utf-8')).hexdigest().decode('utf-8')
-    balance = json_message['unconfirmed'] / 100000000
-    transaction_count = len(json_message['txs']) + 1
-    p2sh_public_key = json_message[json_message.keys()[1]].encode('utf-8')
-    p2sh_address = json_message[json_message.keys()[1]].decode('utf-8')
+# Get balance and transaction count for the specified Bitcoin address
+bitcoin_address = 'your bitcoin address here'
+balance, transaction_count = api.get_balance(bitcoin_address)
 
-    print(f'1. {bitcoin_address}\n2. {balance:,}\n3. {transaction_count}\n4. {p2sh_address}:{p2sh_public_key}\n')
+# Use the Bitcoin library to get the address's public keys
+address = b.BitcoinAddress.from_address(bitcoin_address)
+public_keys = address.public_keys()
 
-    with AuthServiceProxy(auth=rpc_password, user=rpc_user, host='127.0.0.1', port=8332) as proxy:
-        proxy.getblockchaininfo()
-        print(f'5. {bitcoin_address}\n6. {proxy.getbalance(bitcoin
+# Print the desired information about the address in the desired format:
+print('1. Bitcoin Address: ' + bitcoin_address + '\n')
+print('2. Address Balance: ' + str(balance) + "\n")
+print('3. Address Transaction Count: ' + str(transaction_count) + "\n")
+
+# Print addresses in different formats
+print('4. P2SH Address: ' + b.P2SH.to_p2sh(public_keys[0]))
+print('5. P2PKH Address: ' + b.P2PKH.to_p2kh(public_keys[0]))
+
+# Print the address's private keys (not recommended to display private keys in public):
+print('6. Private Keys: ' + (public_keys[0].a, public_keys[0].b, public_keys[0].private).encode('utf-8'))
