@@ -1,0 +1,12 @@
+.response {
+  margin-top: 20px;
+}
+
+.info-list li {
+  margin-bottom: 10px;
+}
+
+.info-list pre {  
+  background: #f9f9f9;
+  padding: 10px;
+}
